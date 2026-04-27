@@ -1,0 +1,34 @@
+services:
+    db:
+        image: mysql:8.0
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Root password (taken from .env)
+            MYSQL_DATABASE: ${MYSQL_DATABASE} # Database name to create (from .env)
+            MYSQL_USER: ${MYSQL_USER} # Additional DB user (from .env)
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD} # Additional user password (from .env)
+            LANG: C.UTF-8
+
+        volumes:
+            - db_data:/var/lib/mysql
+        ports:
+            - 3306:3306
+    jupyter:
+        build: .
+        container_name: jupyter_lab
+        ports:
+            - 80:8888
+        volumes:
+            - .:/home/jovyan/work
+            - jupyter_settings:/home/jovyan/.jupyter
+        environment:
+            # Allows you to use sudo inside the container if needed
+            - GRANT_SUDO=yes
+            # Starts JupyterLab instead of the classic Notebook interface
+            - JUPYTER_ENABLE_LAB=yes
+        env_file: ./.env
+        restart: no
+
+volumes:
+    db_data:
+    jupyter_settings:
