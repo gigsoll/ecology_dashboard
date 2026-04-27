@@ -1,22 +1,49 @@
-FROM quay.io/jupyter/datascience-notebook:2026-04-02
+FROM python:3.14-bookworm AS builder
 
-# 1. Install build dependencies
-USER root
-RUN apt-get update && apt-get install -y \
-    default-libmysqlclient-dev \
-    build-essential \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
-USER jovyan
+# Install UV
+COPY --from=ghcr.io/astral-sh/uv:0.10.2 /uv /uvx /bin/
+# Disable Dev modules
+ENV UV_NO_DEV=1
 
-# 2. Install jupyter deptendecies
-RUN pip install --no-cache-dir \
-    jupyterlab-lsp \
-    'python-lsp-server[all]' \
-    jupyterlab-gruvbox-dark \
-    jupyterthemes \
-    sqlalchemy \
-    mysqlclient
+# Optimization env params
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Expose the work directory
-WORKDIR /home/jovyan/work
+
+# Copy project installation files
+WORKDIR /app
+COPY ./uv.lock /app
+COPY ./pyproject.toml /app
+
+# Install dependencies
+RUN uv sync --locked
+
+FROM python:3.14-slim-bookworm
+
+# Create user and app dir
+RUN useradd -m -r appuser && \
+    mkdir /app && \
+    chown -R appuser /app
+
+# Copy installed packages
+COPY --from=builder /app/.venv/lib/python3.14/site-packages/ /usr/local/lib/python3.14/site-packages/
+
+# Give workdir for user and copy the files
+WORKDIR /app
+COPY --chown=appuser:appuser ./app/ .
+COPY --chown=appuser:appuser ./pyproject.toml .
+COPY --chown=appuser:appuser ./main.py .
+COPY --chown=appuser:appuser ./run_etl.py .
+
+# Set environment variables to optimize Python
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Switch to user
+USER appuser
+
+# Expose port 
+EXPOSE 8000
+
+# Program entrypoint
+CMD [ "fastapi", "dev" ]

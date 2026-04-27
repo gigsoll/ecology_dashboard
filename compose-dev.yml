@@ -14,12 +14,12 @@ services:
         ports:
             - 3306:3306
     jupyter:
-        build: .
+        build: jupyter/
         container_name: jupyter_lab
         ports:
-            - 80:8888
+            - 8888:8888
         volumes:
-            - .:/home/jovyan/work
+            - ./jupyter/:/home/jovyan/work
             - jupyter_settings:/home/jovyan/.jupyter
         environment:
             # Allows you to use sudo inside the container if needed
@@ -28,6 +28,17 @@ services:
             - JUPYTER_ENABLE_LAB=yes
         env_file: ./.env
         restart: no
+
+    backend:
+        build: .
+        container_name: backend
+        ports:
+            - 80:8000
+        volumes:
+            - ./app:/app/app
+            - ./main.py:/app/main.py
+        env_file: ./.env
+        command: python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
 volumes:
     db_data:

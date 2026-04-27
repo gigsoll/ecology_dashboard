@@ -1,6 +1,11 @@
-def main():
-    print("Hello from final!")
+from fastapi import FastAPI
+
+from app.core.config import app_config
 
 
-if __name__ == "__main__":
-    main()
+app = FastAPI(debug=app_config.debug)
+
+
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
