@@ -10,12 +10,12 @@ from typing import Any
 
 def check_if_columns_same(data_dir: str) -> bool:
     c_set = set()
-    files = Path(data_dir).rglob("*.csv")
-    if len(list(files)) == 0:
+    files = list(Path(data_dir).rglob("*.csv"))
+    if len(files) == 0:
         print("Data dir is empty, scraping the data")
         scrape_data()
 
-    for f in files:
+    for f in list(files):
         sdf = pd.read_csv(f)
         c_set.add(tuple(sdf.columns))
 
