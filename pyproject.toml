@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12.2"
 dependencies = [
     "beautifulsoup4>=4.14.3",
+    "dotenv>=0.9.9",
+    "pandas>=3.0.2",
     "pathlib>=1.0.1",
     "requests>=2.33.1",
     "sqladmin[full]>=0.25.0",

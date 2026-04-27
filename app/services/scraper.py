@@ -3,12 +3,13 @@ import os
 import requests
 import re
 from pathlib import Path
+from app.core.config import app_config
 
 
 def scrape_data() -> None:
     res = requests.get("https://opendata.gov.ua/dataset/air_monitor")
     soup = BeautifulSoup(res.text, "html.parser")
-    data_dir = "data"
+    data_dir = app_config.data_dir
 
     Path(data_dir).mkdir(parents=True, exist_ok=True)
 
@@ -42,6 +43,3 @@ def scrape_data() -> None:
             save_path: str = os.path.join(data_dir, table_name)
             with open(save_path, "wb") as file:
                 file.write(file_downloaded.content)
-
-
-scrape_data()
