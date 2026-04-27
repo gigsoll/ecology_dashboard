@@ -1,11 +1,16 @@
 from bs4 import BeautifulSoup
+import os
 import requests
 import re
+from pathlib import Path
 
 
 def scrape_data() -> None:
     res = requests.get("https://opendata.gov.ua/dataset/air_monitor")
     soup = BeautifulSoup(res.text, "html.parser")
+    data_dir = "data"
+
+    Path(data_dir).mkdir(parents=True, exist_ok=True)
 
     # Select only names of the files
     regex: str = r"\d{4}-\d{2}-\d{2}"
@@ -34,5 +39,9 @@ def scrape_data() -> None:
         print(file_downloaded.status_code, table_name, table_link)
 
         if file_downloaded.status_code == 200:
-            with open(table_name, "wb") as file:
+            save_path: str = os.path.join(data_dir, table_name)
+            with open(save_path, "wb") as file:
                 file.write(file_downloaded.content)
+
+
+scrape_data()

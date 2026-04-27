@@ -153,3 +153,4 @@ data/
 .virtual_documents/
 
 .env*
+data
