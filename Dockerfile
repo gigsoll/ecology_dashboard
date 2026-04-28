@@ -25,6 +25,11 @@ RUN useradd -m -r appuser && \
     mkdir /app && \
     chown -R appuser /app
 
+# Install libraries for MySQL
+RUN apt-get update && apt-get install -y \
+    libmariadb-dev-compat \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy installed packages
 COPY --from=builder /app/.venv/lib/python3.14/site-packages/ /usr/local/lib/python3.14/site-packages/
 

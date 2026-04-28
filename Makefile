@@ -8,4 +8,6 @@ logs:
 	docker compose -f compose-dev.yml logs $(filter-out $@,$(MAKECMDGOALS))
 sh:
 	docker compose -f compose-dev.yml exec -it $(filter-out $@,$(MAKECMDGOALS)) bash
+build:
+	docker compose -f compose-dev.yml up -d --build
 
