@@ -14,6 +14,7 @@ def check_if_columns_same(data_dir: str) -> bool:
     if len(files) == 0:
         print("Data dir is empty, scraping the data")
         scrape_data()
+        files = list(Path(data_dir).rglob("*.csv"))
 
     for f in list(files):
         sdf = pd.read_csv(f)
