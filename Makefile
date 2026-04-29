@@ -1,7 +1,7 @@
 up:
 	docker compose -f compose-dev.yml up -d
 down:
-	docker compose -f compose-dev.yml down -v
+	docker compose -f compose-dev.yml down
 ps:
 	docker compose -f compose-dev.yml ps
 logs:
