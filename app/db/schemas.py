@@ -66,6 +66,13 @@ class DimParameter(Base):
         default=0,
         server_default=text("0"),
     )
+    physical_min = Column(Float, nullable=True)
+    physical_max = Column(Float, nullable=True)
+
+    gdk_daily = Column(Float, nullable=True)
+    gdk_short_term = Column(Float, nullable=True)
+
+    gdk_unit_basis = Column(String(32), nullable=True)
 
     # SCD Type 2
     valid_from = Column(DateTime, nullable=False)

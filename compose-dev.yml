@@ -37,6 +37,7 @@ services:
         volumes:
             - ./app:/app/app
             - ./main.py:/app/main.py
+            - ./alembic:/app/alembic
         env_file: ./.env
         command: python -m uvicorn main:app --host 0.0.0.0 --port 8000
 

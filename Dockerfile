@@ -20,10 +20,15 @@ RUN uv sync --locked
 
 FROM python:3.14-slim-bookworm
 
+# Set user Group and ID to match host
+ARG UID=1000
+ARG GID=1000
+
 # Create user and app dir
-RUN useradd -m -r appuser && \
-    mkdir /app && \
-    chown -R appuser /app
+RUN groupadd -g $GID appuser && \
+    useradd -m -u $UID -g appuser appuser && \
+    mkdir -p /app && \
+    chown -R appuser:appuser /app
 
 # Install libraries for MySQL
 RUN apt-get update && apt-get install -y \
