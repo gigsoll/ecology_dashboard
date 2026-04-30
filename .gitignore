@@ -158,7 +158,3 @@ data
 alembic/env.pyc
 alembic/__pycache__/
 alembic/versions/__pycache__/
-
-# If you store local database connection info in an ini file
-alembic.ini
-
