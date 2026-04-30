@@ -1,13 +1,18 @@
-up:
-	docker compose -f compose-dev.yml up -d
-down:
-	docker compose -f compose-dev.yml down
-ps:
-	docker compose -f compose-dev.yml ps
-logs:
-	docker compose -f compose-dev.yml logs $(filter-out $@,$(MAKECMDGOALS))
-sh:
-	docker compose -f compose-dev.yml exec -it $(filter-out $@,$(MAKECMDGOALS)) bash
-build:
-	docker compose -f compose-dev.yml up -d --build
+prefix = docker compose -f compose-dev.yml
 
+ARGS ?=
+
+up:
+	$(prefix) up -d $(ARGS)
+down:
+	$(prefix) down $(ARGS)
+ps:
+	$(prefix) ps
+logs:
+	$(prefix) logs $(ARGS)
+sh:
+	$(prefix) exec -it $(ARGS) bash
+build:
+	$(prefix) up -d --build $(ARGS)
+exec:
+	$(prefix) exec $(ARGS)
