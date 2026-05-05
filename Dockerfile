@@ -44,7 +44,6 @@ COPY --chown=appuser:appuser ./app /app/app
 COPY --chown=appuser:appuser ./alembic /app/alembic
 COPY --chown=appuser:appuser ./alembic.ini /app/alembic.ini
 COPY --chown=appuser:appuser ./main.py /app/main.py
-COPY --chown=appuser:appuser ./run_etl.py /app/run_etl.py
 
 # Set environment variables to optimize Python
 ENV PYTHONDONTWRITEBYTECODE=1

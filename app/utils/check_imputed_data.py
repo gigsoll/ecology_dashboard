@@ -1,36 +1,19 @@
-"""check_imputed_data.py
-
-Visualises the value distribution of every parameter that has at least one
-imputed row (quality_ratio = 0.5) after the fix-oob migration.
-
-For each such parameter one subplot is drawn showing:
-  - Grey bars  : distribution of all valid (non-imputed) readings
-  - Orange bars: distribution of imputed readings (quality_ratio = 0.5)
-  - Red dashed : physical_min / physical_max boundaries from dim_parameters
-
-Run:
-    python check_imputed_data.py
-"""
-
 from __future__ import annotations
 
 import sys
 import math
 
 import matplotlib
-matplotlib.use("Agg")          # no display needed — saves to PNG
+
+matplotlib.use("Agg")  # no display needed — saves to PNG
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import sqlalchemy as sa
 from sqlalchemy import text
 
 from app.core.config import app_config
 
 
-# ---------------------------------------------------------------------------
 # DB connection
-# ---------------------------------------------------------------------------
-
 def _build_engine() -> sa.Engine:
     cfg = app_config
     url = sa.engine.URL.create(
@@ -44,18 +27,17 @@ def _build_engine() -> sa.Engine:
     return sa.create_engine(url, future=True)
 
 
-# ---------------------------------------------------------------------------
 # Data queries
-# ---------------------------------------------------------------------------
-
 def _fetch_imputed_parameter_keys(conn) -> list[int]:
     """Return parameter_keys that have at least one imputed row."""
-    rows = conn.execute(text("""
+    rows = conn.execute(
+        text("""
         SELECT DISTINCT parameter_key
         FROM   fact_measurements
         WHERE  quality_ratio = 0.5
         ORDER  BY parameter_key
-    """)).fetchall()
+    """)
+    ).fetchall()
     return [r.parameter_key for r in rows]
 
 
@@ -68,7 +50,8 @@ def _fetch_parameter_meta(conn, parameter_keys: list[int]) -> dict[int, dict]:
         return {}
 
     keys_csv = ", ".join(str(k) for k in parameter_keys)
-    rows = conn.execute(text(f"""
+    rows = conn.execute(
+        text(f"""
         SELECT
             p.parameter_key,
             COALESCE(p.parameter_name, p.parameter_code) AS display_name,
@@ -80,13 +63,14 @@ def _fetch_parameter_meta(conn, parameter_keys: list[int]) -> dict[int, dict]:
         LEFT  JOIN dim_units u ON u.unit_key = p.unit_key
         WHERE p.parameter_key IN ({keys_csv})
           AND p.is_current = 1
-    """)).fetchall()
+    """)
+    ).fetchall()
 
     return {
         r.parameter_key: {
-            "name":         r.display_name,
-            "code":         r.parameter_code,
-            "unit":         r.unit_symbol or "",
+            "name": r.display_name,
+            "code": r.parameter_code,
+            "unit": r.unit_symbol or "",
             "physical_min": r.physical_min,
             "physical_max": r.physical_max,
         }
@@ -106,8 +90,11 @@ def _fetch_values(
     Values are clamped to [physical_min - 10%, physical_max + 10%] so that
     any remaining extreme outliers don't collapse the histogram bins.
     """
-    lo = physical_min * 0.9 if physical_min is not None and physical_min >= 0 \
-         else (physical_min * 1.1 if physical_min is not None else None)
+    lo = (
+        physical_min * 0.9
+        if physical_min is not None and physical_min >= 0
+        else (physical_min * 1.1 if physical_min is not None else None)
+    )
     hi = physical_max * 1.1 if physical_max is not None else None
 
     clamp_parts = ["value IS NOT NULL", f"parameter_key = {parameter_key}"]
@@ -118,32 +105,34 @@ def _fetch_values(
     clamp_where = " AND ".join(clamp_parts)
 
     # Valid readings (quality_ratio != 0.5, i.e. original non-imputed)
-    valid_rows = conn.execute(text(f"""
+    valid_rows = conn.execute(
+        text(f"""
         SELECT value
         FROM   fact_measurements
         WHERE  {clamp_where}
           AND  (quality_ratio IS NULL OR quality_ratio != 0.5)
         LIMIT  200000
-    """)).fetchall()
+    """)
+    ).fetchall()
 
     # Imputed readings
-    imputed_rows = conn.execute(text(f"""
+    imputed_rows = conn.execute(
+        text(f"""
         SELECT value
         FROM   fact_measurements
         WHERE  {clamp_where}
           AND  quality_ratio = 0.5
-    """)).fetchall()
+    """)
+    ).fetchall()
 
-    valid_values   = [float(r.value) for r in valid_rows]
+    valid_values = [float(r.value) for r in valid_rows]
     imputed_values = [float(r.value) for r in imputed_rows]
     return valid_values, imputed_values
 
 
-# ---------------------------------------------------------------------------
 # Plotting
-# ---------------------------------------------------------------------------
-
 BINS = 60
+
 
 def _plot_parameter(
     ax: plt.Axes,
@@ -153,8 +142,8 @@ def _plot_parameter(
 ) -> None:
     p_min = meta["physical_min"]
     p_max = meta["physical_max"]
-    unit  = meta["unit"]
-    name  = meta["name"]
+    unit = meta["unit"]
+    name = meta["name"]
 
     all_values = valid_values + imputed_values
     if not all_values:
@@ -218,7 +207,8 @@ def _build_figure(
     rows = math.ceil(n / cols)
 
     fig, axes = plt.subplots(
-        rows, cols,
+        rows,
+        cols,
         figsize=(cols * 5.5, rows * 4),
         constrained_layout=True,
     )
@@ -243,10 +233,7 @@ def _build_figure(
     return fig
 
 
-# ---------------------------------------------------------------------------
 # Entry point
-# ---------------------------------------------------------------------------
-
 def main() -> None:
     print("[check] Connecting to database …")
     engine = _build_engine()
@@ -257,10 +244,14 @@ def main() -> None:
 
         if not imputed_keys:
             print("[check] No imputed rows found (quality_ratio=0.5 is absent).")
-            print("        Either the migration has not run yet, or nothing was corrected.")
+            print(
+                "        Either the migration has not run yet, or nothing was corrected."
+            )
             sys.exit(0)
 
-        print(f"[check] {len(imputed_keys)} parameter(s) have imputed rows: {imputed_keys}")
+        print(
+            f"[check] {len(imputed_keys)} parameter(s) have imputed rows: {imputed_keys}"
+        )
 
         print("[check] Fetching parameter metadata …")
         meta_map = _fetch_parameter_meta(conn, imputed_keys)
@@ -268,7 +259,9 @@ def main() -> None:
         # Warn about any key with no current dim_parameters row
         missing = set(imputed_keys) - set(meta_map)
         if missing:
-            print(f"[check] WARNING: no current dim_parameters row for keys {missing} — skipped.")
+            print(
+                f"[check] WARNING: no current dim_parameters row for keys {missing} — skipped."
+            )
 
         data_map: dict[int, tuple[list[float], list[float]]] = {}
         for pk, meta in meta_map.items():
@@ -277,8 +270,7 @@ def main() -> None:
                 conn, pk, meta["physical_min"], meta["physical_max"]
             )
             print(
-                f"[check]     valid={len(valid_vals):,}  "
-                f"imputed={len(imputed_vals):,}"
+                f"[check]     valid={len(valid_vals):,}  imputed={len(imputed_vals):,}"
             )
             data_map[pk] = (valid_vals, imputed_vals)
 
