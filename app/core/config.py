@@ -5,7 +5,7 @@ from dataclasses import dataclass
 @dataclass
 class Config:
     data_dir: str = "data"
-    batch_size: int = 5000
+    batch_size: int = 50000
 
     # DB Config
     db_name: str = os.getenv("MYSQL_DATABASE", "")
