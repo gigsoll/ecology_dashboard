@@ -158,3 +158,6 @@ data
 alembic/env.pyc
 alembic/__pycache__/
 alembic/versions/__pycache__/
+
+jupyter/saved_models/
+jupyter/catboost_info/
