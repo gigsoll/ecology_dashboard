@@ -1,0 +1,61 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+left to right direction
+
+class DimUnit {
+    + unit_key : Integer <<PK>>
+    --
+    unit_name : String(64)
+    unit_symbol : String(16)
+    local_unit_name : String(64)
+}
+
+class DimParameter {
+    + parameter_key : Integer <<PK>>
+    --
+    parameter_code : String(64)
+    parameter_name : String(64)
+    local_name : String(64)
+    unit_key : Integer <<FK>>
+    threshold_limit : DECIMAL(8,4)
+    physical_min : Float
+    physical_max : Float
+    gdk_daily : Float
+    gdk_short_term : Float
+    gdk_unit_basis : String(32)
+    valid_from : DateTime
+    valid_to : DateTime
+    is_current : Boolean
+}
+
+class DimStation {
+    + station_key : Integer <<PK>>
+    --
+    station_id : Integer
+    station_name : String(128)
+    latitude : Float
+    longitude : Float
+    timezone_offset : Integer
+    valid_from : DateTime
+    valid_to : DateTime
+    is_current : Boolean
+}
+
+class FactMeasurement {
+    + measurement_id : BigInteger <<PK>>
+    --
+    station_key : Integer <<FK>>
+    parameter_key : Integer <<FK>>
+    value : Float
+    quality_ratio : Float
+    pollution_level : Integer
+    measurement_timestamp : DateTime
+    offset_minutes : Integer
+}
+
+' Relationships
+DimUnit "1" -- "0..*" DimParameter : unit
+DimParameter "1" -- "0..*" FactMeasurement : parameter
+DimStation "1" -- "0..*" FactMeasurement : station
+@enduml
