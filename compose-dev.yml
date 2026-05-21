@@ -40,7 +40,21 @@ services:
             - ./alembic:/app/alembic
         env_file: ./.env
         command: python -m uvicorn main:app --host 0.0.0.0 --port 8000
+    frontend:
+        build: ./frontend
+        container_name: frontend
+        ports:
+            - 5173:5173
+        volumes:
+            - ./frontend:/frontend
+            - frontend_node_modules:/frontend/node_modules
+        environment:
+            - VITE_API_PROXY_TARGET=http://backend:8000
+        depends_on:
+            - backend
+        restart: no
 
 volumes:
     db_data:
     jupyter_settings:
+    frontend_node_modules:

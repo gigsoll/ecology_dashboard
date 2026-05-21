@@ -1,9 +1,12 @@
+from functools import lru_cache
+
 from sqlalchemy import Engine, create_engine, URL
 from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import app_config
 from app.db.schemas import Base
 
 
+@lru_cache
 def get_engine() -> Engine:
     engine = create_engine(
         URL.create(
@@ -18,10 +21,13 @@ def get_engine() -> Engine:
     return engine
 
 
+@lru_cache
+def get_session_factory() -> sessionmaker[Session]:
+    return sessionmaker(bind=get_engine(), autoflush=False, autocommit=False)
+
+
 def get_session() -> Session:
-    Session = sessionmaker(get_engine())
-    session = Session()
-    return session
+    return get_session_factory()()
 
 
 def init_db():

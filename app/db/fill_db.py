@@ -5,6 +5,7 @@ from typing import Any
 from datetime import datetime
 
 from app.db.database import init_db
+from app.db.parameter_norms import apply_parameter_norms
 from app.db.schemas import DimUnit, DimParameter, DimStation, FactMeasurement
 from app.core.config import app_config
 
@@ -74,6 +75,15 @@ def transform_and_load_parameters(
             )
             session.add(param)
             session.flush()
+        else:
+            if param.parameter_name is None and row["stations_params_name"]:
+                param.parameter_name = row["stations_params_name"]
+            if param.local_name is None and row["stations_params_localName"]:
+                param.local_name = row["stations_params_localName"]
+            if param.unit_key is None:
+                param.unit_key = unit_map.get(str(row["stations_params_unit"]))
+
+        apply_parameter_norms(param)
 
         param_map[str(param.parameter_code)] = int(param.parameter_key)  # type: ignore[arg-type]
 
